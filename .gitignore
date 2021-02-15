@@ -1,14 +1,18 @@
-.gradle
-/build/
+#exclude all unless allowed
+/*
+#gradle
+!/gradle/
+!/gradlew
+!/gradlew.bat
+!/settings.gradle
+!/build.gradle
 
-# Ignore Gradle GUI config
-gradle-app.setting
+#projects
+!/src/
 
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
 
-# Cache of project
-.gradletasknamecache
-
-# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
-# gradle/wrapper/gradle-wrapper.properties
+#Github
+!/README.md
+!/LICENSE.md
+!.gitignore
+!.gitattributes
