@@ -10,9 +10,6 @@ public class RetroSoundPlugin extends SystemCallPlugin{
 
     public RetroSoundPlugin() {
 
-       apu = new APU();
-        apu.begin();
-
         registerSystemCall(new PRSystemCall("SID_REGISTER_WRITE_BYTE") { //make sure that the name entered here and the name in ExampleSystemCallPlugin match this is for verification
             @Override
             public void handleSystemCall() {
@@ -84,13 +81,16 @@ public class RetroSoundPlugin extends SystemCallPlugin{
     @Override
     public void onLoad() {
         //this can be used for any initiation after the constructor if needed
+        apu = new APU();
+        apu.begin();
  
     }
 
     @Override
     public boolean onUnload() {
 
+        apu.destroy();
         //exampleFrame.dispose();
-        return false;
+        return true;
     }
 }

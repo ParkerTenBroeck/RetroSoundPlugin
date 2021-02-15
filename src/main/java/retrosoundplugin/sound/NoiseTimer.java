@@ -4,6 +4,8 @@
  */
 package retrosoundplugin.sound;
 
+import retrosoundplugin.utils;
+
 public class NoiseTimer extends Timer {
 
     private int divider = 0;
@@ -68,7 +70,7 @@ public class NoiseTimer extends Timer {
         for (int i = 0; i < tehsuck.length; ++i) {
             seed = (seed >> 1)
                     | ((((seed & (1 << whichbit)) != 0)
-                    ^ ((seed & (APU.BIT0)) != 0))
+                    ^ ((seed & (utils.BIT0)) != 0))
                     ? 16384 : 0);
             tehsuck[i] = seed;
         }

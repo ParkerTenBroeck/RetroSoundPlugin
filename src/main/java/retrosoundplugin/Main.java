@@ -144,7 +144,6 @@ public class Main {
 
     public static void main(String[] args){
 
-
         squareNoteMap.put("C-1", 0xAD06);
         squareNoteMap.put("C#1", 0x4D06);
         squareNoteMap.put("D-1", 0xF305);
@@ -183,7 +182,6 @@ public class Main {
         squareNoteMap.put("A-3", 0xFD00);
         squareNoteMap.put("A#3", 0xEF00);
         squareNoteMap.put("B-3", 0xE100);
-
 
         APU apu = new APU();
 

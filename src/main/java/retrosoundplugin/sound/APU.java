@@ -8,6 +8,9 @@ package retrosoundplugin.sound;
 
 import retrosoundplugin.ui.Oscilloscope;
 import retrosoundplugin.ui.SwingAudioImpl;
+import retrosoundplugin.utils;
+
+import java.util.ArrayList;
 
 public class APU {
 
@@ -24,7 +27,7 @@ public class APU {
     private  int[] noiseperiod;
     // different for PAL
     private  long accum = 0;
-    //private final ArrayList<ExpansionSoundChip> expnSound = new ArrayList<>();
+    private final ArrayList<ExpansionSoundChip> expnSound = new ArrayList<>();
     private  boolean soundFiltering;
     private static final  int[] TNDLOOKUP = initTndLookup(), SQUARELOOKUP = initSquareLookup();
     private  int framectrreload;
@@ -74,16 +77,43 @@ public class APU {
             {1, 0, 0, 1, 1, 1, 1, 1}
     };
 
-    public final static int BIT0 = 1, BIT1 = 2, BIT2 = 4, BIT3 = 8, BIT4 = 16,
-            BIT5 = 32, BIT6 = 64, BIT7 = 128, BIT8 = 256, BIT9 = 512,
-            BIT10 = 1024, BIT11 = 2048, BIT12 = 4096, BIT13 = 8192,
-            BIT14 = 16384, BIT15 = 32768;
-
     private  void setvolumes() {
         volume[0] = ((lengthctr[0] <= 0 || sweepsilence[0]) ? 0 : (((envConstVolume[0]) ? envelopeValue[0] : envelopeCounter[0])));
         volume[1] = ((lengthctr[1] <= 0 || sweepsilence[1]) ? 0 : (((envConstVolume[1]) ? envelopeValue[1] : envelopeCounter[1])));
         volume[3] = ((lengthctr[3] <= 0) ? 0 : ((envConstVolume[3]) ? envelopeValue[3] : envelopeCounter[3]));
         //System.err.println("setvolumes " + volume[1]);
+    }
+
+    public void addExpnSound(ExpansionSoundChip chip) {
+        expnSound.add(chip);
+    }
+
+    public void destroy() {
+        ai.destroy();
+    }
+
+    public void pause() {
+        ai.pause();
+    }
+
+    public void resume() {
+        ai.resume();
+    }
+
+    private int getOutputLevel() {
+        int vol;
+        vol = SQUARELOOKUP[volume[0] * timers[0].getval()
+                + volume[1] * timers[1].getval()];
+        vol += TNDLOOKUP[3 * timers[2].getval()
+                + 2 * volume[3] * timers[3].getval()
+                + dmcvalue];
+        if (!expnSound.isEmpty()) {
+            vol *= 0.8;
+            for (ExpansionSoundChip c : expnSound) {
+                vol += c.getval();
+            }
+        }
+        return vol; //as usual, lack of unsigned types causes unending pain.
     }
 
     private static int[] initTndLookup() {
@@ -137,25 +167,6 @@ public class APU {
                 return 0x40; //open bus
         }
     }
-
-    private  int getOutputLevel() {
-        int vol;
-        vol = SQUARELOOKUP[volume[0] * timers[0].getval()
-                + volume[1] * timers[1].getval()];
-        vol += TNDLOOKUP[3 * timers[2].getval()
-                + 2 * volume[3] * timers[3].getval()
-                + dmcvalue];
-        /*
-        if (!expnSound.isEmpty()) {
-            vol *= 0.8;
-            for (ExpansionSoundChip c : expnSound) {
-                vol += c.getval();
-            }
-        }
-        */
-        return vol; //as usual, lack of unsigned types causes unending pain.
-    }
-
 
     private  int highpass_filter(int sample) {
         //for killing the dc in the signal
@@ -227,11 +238,11 @@ public class APU {
                     timers[2].clock();
                 }
                 timers[3].clock();
-                //if (!expnSound.isEmpty()) {
-                //    for (ExpansionSoundChip c : expnSound) {
-                //        c.clock(1);
-                //    }
-                //}
+                if (!expnSound.isEmpty()) {
+                    for (ExpansionSoundChip c : expnSound) {
+                        c.clock(1);
+                    }
+                }
                 accum += getOutputLevel();
 
                 if ((apucycle % cyclespersample) < 1) {
@@ -260,11 +271,11 @@ public class APU {
                     }
                     timers[3].clock(remainder);
                     int mixvol = getOutputLevel();
-                    //if (!expnSound.isEmpty()) {
-                    //    for (ExpansionSoundChip c : expnSound) {
-                    //        c.clock(remainder);
-                    //    }
-                    //}
+                    if (!expnSound.isEmpty()) {
+                        for (ExpansionSoundChip c : expnSound) {
+                            c.clock(remainder);
+                        }
+                    }
                     remainder = 0;
                     ai.outputSample(lowpass_filter(highpass_filter(mixvol)));
                 }
@@ -309,22 +320,22 @@ public class APU {
         switch (reg) {
             case 0x0:
                 //length counter 1 halt
-                lenctrHalt[0] = ((data & (BIT5)) != 0);
+                lenctrHalt[0] = ((data & (utils.BIT5)) != 0);
                 // pulse 1 duty cycle
                 timers[0].setduty(DUTYLOOKUP[data >> 6]);
                 // and envelope
-                envConstVolume[0] = ((data & (BIT4)) != 0);
+                envConstVolume[0] = ((data & (utils.BIT4)) != 0);
                 envelopeValue[0] = data & 15;
                 //setvolumes();
                 break;
             case 0x1:
                 //pulse 1 sweep setup
                 //sweep enabled
-                sweepenable[0] = ((data & (BIT7)) != 0);
+                sweepenable[0] = ((data & (utils.BIT7)) != 0);
                 //sweep divider period
                 sweepperiod[0] = (data >> 4) & 7;
                 //sweep negate flag
-                sweepnegate[0] = ((data & (BIT3)) != 0);
+                sweepnegate[0] = ((data & (utils.BIT3)) != 0);
                 //sweep shift count
                 sweepshift[0] = (data & 7);
                 sweepreload[0] = true;
@@ -346,22 +357,22 @@ public class APU {
                 break;
             case 0x4:
                 //length counter 2 halt
-                lenctrHalt[1] = ((data & (BIT5)) != 0);
+                lenctrHalt[1] = ((data & (utils.BIT5)) != 0);
                 // pulse 2 duty cycle
                 timers[1].setduty(DUTYLOOKUP[data >> 6]);
                 // and envelope
-                envConstVolume[1] = ((data & (BIT4)) != 0);
+                envConstVolume[1] = ((data & (utils.BIT4)) != 0);
                 envelopeValue[1] = data & 15;
                 //setvolumes();
                 break;
             case 0x5:
                 //pulse 2 sweep setup
                 //sweep enabled
-                sweepenable[1] = ((data & (BIT7)) != 0);
+                sweepenable[1] = ((data & (utils.BIT7)) != 0);
                 //sweep divider period
                 sweepperiod[1] = (data >> 4) & 7;
                 //sweep negate flag
-                sweepnegate[1] = ((data & (BIT3)) != 0);
+                sweepnegate[1] = ((data & (utils.BIT3)) != 0);
                 //sweep shift count
                 sweepshift[1] = (data & 7);
                 sweepreload[1] = true;
@@ -384,7 +395,7 @@ public class APU {
                 //triangle linear counter load
                 linctrreload = data & 0x7f;
                 //and length counter halt
-                lenctrHalt[2] = ((data & (BIT7)) != 0);
+                lenctrHalt[2] = ((data & (utils.BIT7)) != 0);
                 break;
             case 0x9:
                 break;
@@ -403,15 +414,15 @@ public class APU {
                 break;
             case 0xC:
                 //noise halt and envelope
-                lenctrHalt[3] = ((data & (BIT5)) != 0);
-                envConstVolume[3] = ((data & (BIT4)) != 0);
+                lenctrHalt[3] = ((data & (utils.BIT5)) != 0);
+                envConstVolume[3] = ((data & (utils.BIT4)) != 0);
                 envelopeValue[3] = data & 0xf;
                 //setvolumes();
                 break;
             case 0xD:
                 break;
             case 0xE:
-                timers[3].setduty(((data & (BIT7)) != 0) ? 6 : 1);
+                timers[3].setduty(((data & (utils.BIT7)) != 0) ? 6 : 1);
                 timers[3].setperiod(noiseperiod[data & 15]);
                 break;
             case 0xF:
@@ -422,8 +433,8 @@ public class APU {
                 envelopeStartFlag[3] = true;
                 break;
             case 0x10:
-                dmcirq = ((data & (BIT7)) != 0);
-                dmcloop = ((data & (BIT6)) != 0);
+                dmcirq = ((data & (utils.BIT7)) != 0);
+                dmcloop = ((data & (utils.BIT6)) != 0);
                 dmcrate = dmcperiods[data & 0xf];
                 if (!dmcirq && statusdmcint) {
                     statusdmcint = false;
@@ -461,7 +472,7 @@ public class APU {
                         lengthctr[i] = 0;
                     }
                 }
-                if (((data & (BIT4)) != 0)) {
+                if (((data & (utils.BIT4)) != 0)) {
                     if (dmcsamplesleft == 0) {
                         restartdmc();
                     }
@@ -479,9 +490,9 @@ public class APU {
                 //nes.getcontroller2().output(((data & (utils.BIT0)) != 0));
                 break;
             case 0x17:
-                ctrmode = ((data & (BIT7)) != 0) ? 5 : 4;
+                ctrmode = ((data & (utils.BIT7)) != 0) ? 5 : 4;
                 //System.err.println("reset " + ctrmode + ' ' + cpu.cycles);
-                apuintflag = ((data & (BIT6)) != 0);
+                apuintflag = ((data & (utils.BIT6)) != 0);
                 //set is no interrupt, clear is an interrupt
                 framectr = 0;
                 framectrdiv = framectrreload + 8; //Why +8?
@@ -596,7 +607,7 @@ public class APU {
                 }
             }
             if (!dmcsilence) {
-                dmcvalue += (((dmcshiftregister & (BIT0)) != 0) ? 2 : -2);
+                dmcvalue += (((dmcshiftregister & (utils.BIT0)) != 0) ? 2 : -2);
                 //DMC output register doesn't wrap around
                 if (dmcvalue > 0x7f) {
                     dmcvalue = 0x7f;
