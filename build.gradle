@@ -18,10 +18,17 @@ repositories {
     mavenCentral()
 }
 
-mainClassName = 'retrosoundplugin.SoundHell'
+mainClassName = 'retrosoundplugin.Main'
 
+processResources {
+    from('LICENSE')
+}
 
 application {
     // Define the main class for the application.
     mainClass = mainClassName
+}
+
+dependencies {
+    implementation files('libs/MIPS.jar')
 }
