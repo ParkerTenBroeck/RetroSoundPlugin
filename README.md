@@ -15,6 +15,9 @@ A plugin for the MIPS Virtual processor / assembler to add Famicon sound emulati
 
 ## Usage
 
+Navigate to Documents -> MIPS -> SystemCallPlugins and place the single jar file into this directory
+After opening the MIPS assembler/emulator the plugin will be registered
+
 ## Other
 
 An example of what you can do can be found here. This example only uses the 2A03 sound chip found in the NES / Famicon 
