@@ -6,6 +6,7 @@
  */
 package retrosoundplugin.sound;
 
+import retrosoundplugin.RetroSoundPlugin;
 import retrosoundplugin.ui.Oscilloscope;
 import retrosoundplugin.ui.SwingAudioImpl;
 import retrosoundplugin.utils;
@@ -182,7 +183,9 @@ public class APU {
         return lpaccum;
     }
 
-    public APU(){
+    private RetroSoundPlugin retroSoundPlugin;
+    public APU(RetroSoundPlugin retroSoundPlugin){
+        this.retroSoundPlugin = retroSoundPlugin;
         soundFiltering = true;
         samplerate = 44100;
 
@@ -214,10 +217,10 @@ public class APU {
     public synchronized  final void finishframe() {
         updateto(cyclesperframe);
         apucycle = 0;
-        ai.flushFrame(true);
+        ai.flushFrame(false);
     }
 
-    public  final void updateto(final int cpucycle) {
+    public synchronized final void updateto(final int cpucycle) {
         //still have to run this even if sound is disabled, some games rely on DMC IRQ etc.
         if (soundFiltering) {
             //linear sampling code
@@ -313,7 +316,7 @@ public class APU {
     }
 
 
-    public final  void write(final int reg, final int data) {
+    public final synchronized void write(final int reg, final int data) {
         //This is how values written to any of the APU's memory
         //mapped registers change the state of the system.
         //System.err.println("Wrote " + utils.hex(data) + " to " + utils.hex(reg) + " @ cycle " + cpu.cycles);
@@ -445,7 +448,7 @@ public class APU {
                 dmcvalue = data & 0x7f;
                 break;
             case 0x12:
-                dmcstartaddr = (data << 6) + 0xc000;
+                dmcstartaddr = (data << 6) + dmcstartaddr;
                 break;
             case 0x13:
                 dmcsamplelength = (data << 4) + 1;
@@ -622,17 +625,22 @@ public class APU {
         }
     }
 
+    public void setStartAddress(int address){
+        dmcstartaddr = address;
+        System.out.println(address);
+    }
+
     private  void dmcfillbuffer() {
         if (dmcsamplesleft > 0) {
-            //dmcbuffer = cpuram.read(dmcaddr++);
+            dmcbuffer = retroSoundPlugin.readMemory(dmcaddr++);//FakeRam.read(dmcaddr++);
             dmcBufferEmpty = false;
             //cpu.stealcycles(4);
 
             //DPCM Does steal cpu cycles - this should actually vary between 1-4
             //can't do this properly without a cycle accurate cpu/ppu
-            if (dmcaddr > 0xffff) {
-                dmcaddr = 0x8000;
-            }
+            //if (dmcaddr > 0xffff) {
+            //    dmcaddr = 0x8000;
+            //}
             --dmcsamplesleft;
             if (dmcsamplesleft == 0) {
                 if (dmcloop) {

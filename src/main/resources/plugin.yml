@@ -12,7 +12,7 @@ prefix: RetroSound Plugin
 system_calls:
   SID_REGISTER_WRITE_BYTE:
     SYSTEM_CALL_NUMBER: 300
-    SYSTEM_CALL_DISCRIPTION: writes a single byte to the SID register at address $4 with value (byte)$5
+    SYSTEM_CALL_DESCRIPTION: writes a single byte to the SID register at address $4 with value (byte)$5
     REGISTERS_READ_FROM: [4, 5]
     REGISTERS_WRITTEN_TO: []
     PC_REG_READ_FROM: false
@@ -26,7 +26,7 @@ system_calls:
 
   SID_REGISTER_WRITE_WORD:
     SYSTEM_CALL_NUMBER: 301
-    SYSTEM_CALL_DISCRIPTION: writes a word to the SID register at address $4 to $4 + 0x03 with value (byte)$5 -> $4 and (byte)%5 >> 24 -> $4 + 0x03
+    SYSTEM_CALL_DESCRIPTION: writes a word to the SID register at address $4 to $4 + 0x03 with value (byte)$5 -> $4 and (byte)%5 >> 24 -> $4 + 0x03
     REGISTERS_READ_FROM: [4, 5]
     REGISTERS_WRITTEN_TO: []
     PC_REG_READ_FROM: false
@@ -41,7 +41,7 @@ system_calls:
 
   SID_REGISTER_READ_BYTE:
     SYSTEM_CALL_NUMBER: 302
-    SYSTEM_CALL_DISCRIPTION: reads a single byte from the SID at register $4 and places the value in $2
+    SYSTEM_CALL_DESCRIPTION: reads a single byte from the SID at register $4 and places the value in $2
     REGISTERS_READ_FROM: [4]
     REGISTERS_WRITTEN_TO: [2]
     PC_REG_READ_FROM: false
@@ -55,9 +55,51 @@ system_calls:
 
   SID_REGISTER_READ_WORD:
     SYSTEM_CALL_NUMBER: 303
-    SYSTEM_CALL_DISCRIPTION: reads the mins slider and places the value into $2
+    SYSTEM_CALL_DESCRIPTION: reads the mins slider and places the value into $2
     REGISTERS_READ_FROM: [4]
     REGISTERS_WRITTEN_TO: [2]
+    PC_REG_READ_FROM: false
+    PC_REG_WRITTEN_TO: false
+    HIGH_REG_READ_FROM: false
+    HIGH_REG_WRITTEN_TO: false
+    LOW_REG_READ_FROM: false
+    LOW_REG_WRITTEN_TO: false
+    MEMORY_READ_FROM: false
+    MEMORY_WRITTEN_TO: false
+
+  SID_SET_DMC_STARTING_ADDRESS:
+    SYSTEM_CALL_NUMBER: 304
+    SYSTEM_CALL_DESCRIPTION: sets the starting address for the DMC samples
+    REGISTERS_READ_FROM: [ 4 ]
+    REGISTERS_WRITTEN_TO: [ ]
+    PC_REG_READ_FROM: false
+    PC_REG_WRITTEN_TO: false
+    HIGH_REG_READ_FROM: false
+    HIGH_REG_WRITTEN_TO: false
+    LOW_REG_READ_FROM: false
+    LOW_REG_WRITTEN_TO: false
+    MEMORY_READ_FROM: true
+    MEMORY_WRITTEN_TO: false
+
+  SID_RESUME:
+      SYSTEM_CALL_NUMBER: 305
+      SYSTEM_CALL_DESCRIPTION: resumes sound
+      REGISTERS_READ_FROM: [ ]
+      REGISTERS_WRITTEN_TO: [ ]
+      PC_REG_READ_FROM: false
+      PC_REG_WRITTEN_TO: false
+      HIGH_REG_READ_FROM: false
+      HIGH_REG_WRITTEN_TO: false
+      LOW_REG_READ_FROM: false
+      LOW_REG_WRITTEN_TO: false
+      MEMORY_READ_FROM: true
+      MEMORY_WRITTEN_TO: false
+
+  SID_STOP:
+    SYSTEM_CALL_NUMBER: 306
+    SYSTEM_CALL_DESCRIPTION: stops all sounds
+    REGISTERS_READ_FROM: [ ]
+    REGISTERS_WRITTEN_TO: [ ]
     PC_REG_READ_FROM: false
     PC_REG_WRITTEN_TO: false
     HIGH_REG_READ_FROM: false

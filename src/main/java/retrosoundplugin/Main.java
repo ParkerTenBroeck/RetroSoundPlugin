@@ -2,6 +2,7 @@ package retrosoundplugin;
 
 import retrosoundplugin.sound.APU;
 
+import java.io.*;
 import java.util.HashMap;
 
 public class Main {
@@ -183,19 +184,59 @@ public class Main {
         squareNoteMap.put("A#3", 0xEF00);
         squareNoteMap.put("B-3", 0xE100);
 
-        APU apu = new APU();
+        APU apu = new APU(null);
 
         apu.begin();
 
         for(int i = 0; i < 5; i ++){
-            apu.write(i * 4, 0x30);
-            apu.write(i * 4 + 1, 0x08);
-            apu.write(i * 4 + 2, 0x00);
-            apu.write(i * 4 + 3, 0x00);
+            //apu.write(i * 4, 0x30);
+            //apu.write(i * 4 + 1, 0x08);
+            //apu.write(i * 4 + 2, 0x00);
+            //apu.write(i * 4 + 3, 0x00);
         }
 
-        apu.write(0x15, 0x0f);
-        apu.write(0x17, 0x40);
+        //apu.write(0x15, 0x0f);
+        //apu.write(0x17, 0x40);
+
+
+        File file = new File("C:/GitHub/Sound/test.bin");
+        InputStream in = null;
+        try {
+            in = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        byte[] newData = new byte[0x18 * 2];
+        while(true){
+            try {
+                if (in.available() <= 0) break;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                for(int i = 0; i < newData.length ; i ++){
+                    newData[i] = (byte) in.read();
+                }
+
+                for(int i = 0; i < 0x18; i ++){
+
+                    if(newData[i * 2] > 0) {
+                        apu.write(i, ((int) newData[i * 2 + 1]) & 0xFF);
+                    }
+                }
+
+                try {
+                    long start = System.nanoTime();
+                    Thread.sleep(16);
+
+                } catch (Exception e) {
+
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         for(int p = 0; p < Math.pow(2, 11) ; p ++) {
 

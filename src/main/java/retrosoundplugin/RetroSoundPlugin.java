@@ -4,6 +4,9 @@ import org.parker.mips.plugin.syscall.SystemCallPlugin;
 
 import retrosoundplugin.sound.APU;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class RetroSoundPlugin extends SystemCallPlugin{
 
     APU apu;
@@ -13,7 +16,7 @@ public class RetroSoundPlugin extends SystemCallPlugin{
         registerSystemCall(new PRSystemCall("SID_REGISTER_WRITE_BYTE") { //make sure that the name entered here and the name in ExampleSystemCallPlugin match this is for verification
             @Override
             public void handleSystemCall() {
-                apu.write(getRegister(4), (byte) getRegister(5));
+                apu.write(getRegister(4), getRegister(5));
             }
         });
         registerSystemCall(new PRSystemCall("SID_REGISTER_WRITE_WORD") {
@@ -40,6 +43,24 @@ public class RetroSoundPlugin extends SystemCallPlugin{
             public void handleSystemCall() {
                 //exampleFrame.opExampleFrame();
                 //setRegister(2, exampleFrame.getMins());
+            }
+        });
+        registerSystemCall(new PRSystemCall("SID_SET_DMC_STARTING_ADDRESS") {
+            @Override
+            public void handleSystemCall() {
+                apu.setStartAddress(getRegister(4));
+            }
+        });
+        registerSystemCall(new PRSystemCall("SID_RESUME") {
+            @Override
+            public void handleSystemCall() {
+                apu.resume();
+            }
+        });
+        registerSystemCall(new PRSystemCall("SID_STOP") {
+            @Override
+            public void handleSystemCall() {
+                apu.pause();
             }
         });
 
@@ -81,16 +102,22 @@ public class RetroSoundPlugin extends SystemCallPlugin{
     @Override
     public void onLoad() {
         //this can be used for any initiation after the constructor if needed
-        apu = new APU();
+        apu = new APU(this);
         apu.begin();
- 
     }
 
     @Override
     public boolean onUnload() {
 
         apu.destroy();
-        //exampleFrame.dispose();
+        apu = null;
         return true;
+    }
+
+    public int readMemory(int address){
+
+        System.out.println(address);
+        return ((int)getByte(address)) & 0xFF;
+        //LOGGER.log(Level.WARNING, address);
     }
 }
